@@ -1,0 +1,90 @@
+<link rel="import" href="../bower_components/paper-styles/shadow.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/app-localize-behavior/app-localize-behavior.html">
+<link rel="import" href="art-obj-behavior.html">
+<link rel="import" href="art-controls.html">
+
+
+<dom-module id="art-comp">
+    <style>
+        :host {
+            display: block;
+            /* box-sizing: border-box;
+             background-color: #fafafa;
+             color: #212121;
+             padding: 1em;
+             @apply(--paper-font-common-base);
+             @apply(--shadow-elevation-2dp);
+             border-radius: 2px; */
+        }
+
+        .cnt-title{
+            --paper-input-container-disabled:{
+                color: #00b0ff;
+                opacity: 1;
+            };
+
+            --paper-input-container-underline:{
+                display: none;
+            };
+
+            --paper-input-container-underline-disabled:{
+                display: none;
+            };
+
+            --paper-input-container-label-floating:{
+                display: none;
+            }
+
+        }
+
+    </style>
+    <template>
+        <!--iron-ajax id="text" auto url="art2rentApp/json/text.json" handle-as="json" on-response="lkpText"></iron-ajax-->
+
+        <firebase-document
+                id="document"
+                app-name="notes"
+                path="/comps/[[objId]]"
+                data="{{artObj}}">
+        </firebase-document>
+
+        <!-- isAdmin true so disabled is false all the time, so modification is allowed -->
+        <paper-input label="{{localize('name')}}" value="{{artObj.name}}" class="cnt-title" disabled="[[!isAdmin]]"></paper-input>
+        <paper-input label="{{localize('desc')}}" value="{{artObj.desc}}" class="cnt-body"  disabled="[[!isAdmin]]"></paper-input>
+
+        <art-controls on-control-evt="execControl" hidden$="[[!isadmin]]"></art-controls>
+
+    </template>
+    <script>
+        Polymer({
+            is: "art-comp",
+
+
+            behaviors: [
+                Polymer.ArtObjBehaviorImpl,
+                Polymer.AppLocalizeBehavior
+            ],
+
+            // Override
+            getPath(){
+                return 'comp/';
+            },
+
+            ready() {
+                this.newObj();
+                this.objType = 'comp';
+            },
+
+            newObj(){
+                this.artObj = {name: '', desc: ''};
+            }
+
+        });
+    </script>
+
+</dom-module>

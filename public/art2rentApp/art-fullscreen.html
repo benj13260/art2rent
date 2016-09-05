@@ -1,0 +1,340 @@
+<link rel="import" href="../bower_components/paper-styles/shadow.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/neon-animation/web-animations.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animated-pages.html">
+<!--link rel="import" href="../../bower_components/neon-animation/neon-animation.html"-->
+<link rel="import" href="../bower_components/neon-animation/animations/slide-from-left-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/slide-left-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/slide-from-right-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/slide-right-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/iron-a11y-keys/iron-a11y-keys.html">
+<link rel="import" href="art-lang-behavior.html">
+<link rel="import" href="art-page-behavior.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
+
+
+
+<link rel="import" href="art-gallery-canvas.html">
+<link rel="import" href="art-globals.html">
+
+<dom-module id="art-fullscreen">
+    <style>
+        :host {
+            display: block;
+        }
+
+        .avatar {
+            box-sizing: border-box;
+            background: #ffffff;
+            --iron-image-placeholder: {
+                background: #ffffff;
+            };
+        }
+
+        #board{
+            position:relative;
+            width: 99%;
+            heigh: 100%;
+        }
+
+        #canvastab{
+            left: 0px;
+            position: fixed;
+            z-index: 100;
+        }
+
+        paper-button{
+            border-bottom-style: solid;
+            border-bottom-width: 1px;
+            border-bottom-color: #ffffff;
+            text-decoration: none;
+            text-transform: uppercase;
+            padding: 0px 2px 2px 2px;
+            margin: 0px;
+            color: #7c7c7c;
+            min-width:1%;
+        }
+
+        .canvasTab{
+            margin:0px 0px 0px 10px;
+        }
+
+        paper-button[focused]{
+            border-bottom-color:#31f0ef;
+        }
+
+        .foc{
+            border-bottom-color:#31f0ef;
+            font-weight: bold;
+        }
+
+        /*.noFoc{
+            border-bottom-color:#ffffff;
+        }*/
+
+        #board{
+            border-width: 1px;
+            border-style: solid;
+        }
+
+    </style>
+    <template>
+
+        <art-globals id="globs"></art-globals>
+        <iron-signals on-iron-signal-language="langUpd"></iron-signals>
+
+        <firebase-query id="query" app-name="notes" data="{{data}}"></firebase-query>
+
+
+        <iron-a11y-keys target="[[target]]" keys="left pagedown down"
+                        on-keys-pressed="decrement"></iron-a11y-keys>
+
+        <iron-a11y-keys target="[[target]]" keys="right pageup up"
+                        on-keys-pressed="increment"></iron-a11y-keys>
+
+        <!--  -->
+        <div class="canvastab">
+            <template is="dom-repeat" items="{{data}}" >
+                <paper-button id="tab-[[item.name]]" on-tap="goTo" data-args="[[item.name]]">[[canvasName(index)]]</paper-button>
+            </template>
+        </div>
+
+        <div id="board" on-tap="cliked">
+            <neon-animated-pages id="canvases" selected="[[canvasID]]" attr-for-selected ="id">
+                <template is="dom-repeat" items="{{data}}" >
+                    <art-gallery-canvas id="[[item.name]]" canvas-src="[[item.url]]"></art-gallery-canvas>
+                </template>
+            </neon-animated-pages>
+        </div>
+    </template>
+
+    <script>
+        Polymer({
+            is: "art-fullscreen",
+
+            properties:{
+                artUrl: {
+                    type: String,
+                    observer: 'decryptURL',
+                    notify: true,
+                    reflectToAttribute: true,
+                },
+                noReload:{
+                    type: Boolean,
+                    value: false
+                },
+                data: {
+                    type: Object,
+                    notify: true,
+                    observer: 'dataUpd'
+                },
+                artistID: String,            // Artist name
+                canvasID: {                  // Canvas name
+                    type: String,
+                    observer:'routeUpd'
+                },
+                itemID:{                     // Item ID in the data Array
+                  type: Number,
+                  value: -1
+                },
+                target: {                    // Target for key binding
+                    type: Object,
+                    value: function () {
+                        return document.body;
+                    },
+                },
+             },
+
+            behaviors: [
+                Polymer.ArtLangBehavior,
+                Polymer.ArtPageBehaviorImpl,
+            ],
+
+            observers: [
+                '_itemsChange(data.splices)'
+            ],
+
+            _itemsChange: function(items) {
+                //console.log('data: ', items);
+                if (items === undefined)
+                    return;
+                if (this.canvasID != null)
+                    return;
+                this.canvasID = this.data[0].name;
+                this.itemID = 0;
+            },
+
+            canvasName(index){
+                return index+1;
+            },
+
+            updateButFoc(){
+                var c; // Update button focus
+                for(var i=0; i<this.data.length; i++) {
+                    c = this.$$('#tab-'+ this.data[i].name);
+                    if (c == null)
+                        return;
+                    if (this.data[i].name == this.canvasID)
+                        c.toggleClass('foc',true);
+                    else
+                        c.toggleClass('foc',false);
+                }
+            },
+
+            // Update the route when a new canvas is displayed
+            // ** Without any full reload of the firebase query **
+            routeUpd(e){
+                this.updateButFoc();
+                this.noReload = true;
+                this.fire('route-upd','fullscreen/'+this.artistID+'/'+this.canvasID)
+            },
+
+            goTo(e){
+                if (this.itemID == -1)
+                    this.itemInData();
+                var newCanvasID =  e.model.item.name;
+                var newItemID = this.itemInDataRet(newCanvasID);
+
+                if (this.itemID < newItemID){
+                    this.$$('#' + newCanvasID).entryAnimation = 'slide-from-right-animation';
+                    this.$$('#'+this.canvasID).exitAnimation= 'slide-left-animation';
+                    // TODO: Play fast animation one to one
+                    /*for (var i= this.itemID+1; i <= newItemID; i++) {
+                        console.log('for: '+this.data[i].name);
+                        this.canvasID = this.data[i].name;
+                        //wait animation completion --> Add speed
+                    }*/
+                    //this.itemID = newItemID;
+                }else if(this.itemID > newItemID){
+                    this.$$('#'+newCanvasID).entryAnimation= 'slide-from-left-animation';
+                    this.$$('#' + this.canvasID).exitAnimation = 'slide-right-animation';
+                    // TODO: Play fast animation one to one
+                    /*for (var i= this.itemID-1; i >= newItemID; i--) {
+                        this.canvasID = this.data[i].name;
+                        //wait animation completion --> Add speed
+                    }*/
+                    //this.itemID = newItemID;
+                }
+
+                this.itemID = newItemID;
+                this.canvasID = newCanvasID
+            },
+
+            // When new data are flowing in, the itemID need to be recalculated
+            // BUG Polymer: data is not available when this function is called
+            dataUpd(newv,oldv){
+                this.itemID = -1;
+            },
+
+            // Animation triggered when next canvas requested
+            increment(e){
+                if (!this.isPageActive(this.$.globs.pages.fullscreen))
+                    return;
+                if (this.itemID == -1)
+                    this.itemInData();
+                if (this.itemID == this.data.length - 1)
+                    return;
+                this.$$('#'+this.canvasID).exitAnimation= 'slide-left-animation';
+                this.itemID++;
+                this.$$('#' + this.data[this.itemID].name).entryAnimation = 'slide-from-right-animation';
+                this.canvasID = this.data[this.itemID].name;
+            },
+
+            // Animation triggered when previous canvas requested
+            decrement(e){
+                if (!this.isPageActive(this.$.globs.pages.fullscreen))
+                    return;
+                if (this.itemID == -1)
+                    this.itemInData();
+                if (this.itemID == 0)
+                    return;
+                this.$$('#' + this.canvasID).exitAnimation = 'slide-right-animation';
+                this.itemID--;
+                this.$$('#'+this.data[this.itemID].name).entryAnimation= 'slide-from-left-animation';
+                this.canvasID = this.data[this.itemID].name;
+            },
+
+            // called when user is cliking on a canvas. Go next or previous depening of the position
+            cliked(e){
+                if (this.itemID == -1)
+                    this.itemInData();
+                if ( e.detail.x > (window.innerWidth/2) ){ // go to next
+                    this.increment();
+                }else{ // go to previous
+                    this.decrement();
+                }
+            },
+
+            // return index of data Object for a given name
+            itemInDataRet(can){
+                for (var i = 0; i < this.data.length; i++){
+                    if (this.data[i].name == can){
+                        //this.itemID = i;
+                        return i;
+                    }
+                }
+                return null;
+            },
+
+            // set itemID
+            itemInData(){
+                if (this.canvasID === undefined || this.canvasID == null || this.canvasID == '') {
+                    this.canvasID = this.data[0].name
+                    this.itemID = 0;
+                    return;
+                }
+                this.itemID = this.itemInDataRet(this.canvasID);
+            },
+
+            // Read URL and call for a dataUpdate
+            decryptURL(newv, oldv){
+                //console.log('1 decrypt URL '+this.artSection+'  '+newv);
+                //Avoid this process when the event is triggered by this page
+                if (this.noReload){
+                    this.noReload = false;
+                    return;
+                }
+                //console.log('2 decrypt URL '+this.artSection+'  '+newv);
+
+                //Avoid this process if page not active
+                if (!this.isPageActive(this.$.globs.pages.fullscreen) || newv == null)
+                    return;
+                //console.log('3 decrypt URL '+this.artSection);
+                this.$.query.disabled = false;
+                let url = newv.substr(1,newv.length-1);
+                this.itemID = -1;
+                //console.log('url: '+url);
+                if ( url.search(/\/all/i) > 0  ){ // all
+                    //console.log('A: artist: '+res[0]+' / canvas: '+res[1]);
+                    return;
+                }
+                if ( url.search(/\//i) > 0  ){ // artistID/canvasID
+                    let res = url.split('/');
+                    //console.log('B: artist: '+res[0]+' / canvas: '+res[1]);
+                    this.artistID = res[0];
+                    this.canvasID = res[1];
+                    this.itemInData();
+                    this.$.query.path = null;
+                    this.$.query.path = 'artists/'+this.artistID+'/canvas';
+                    return;
+                }
+                this.artistID = url;
+                //console.log('C: artist: '+this.artistID);
+                url = 'artists/'+this.artistID+'/canvas';
+                //console.log('artist: '+url);
+                // Select first canvas
+                this.$.query.path = null;
+                this.$.query.path = url;
+
+                return;
+            }
+        });
+    </script>
+
+</dom-module>

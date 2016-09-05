@@ -1,0 +1,120 @@
+<link rel="import" href="../bower_components/paper-styles/shadow.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="art-obj-behavior.html">
+<link rel="import" href="art-controls.html">
+
+<link rel="import" href="art-globals.html">
+<link rel="import" href="art-lang-behavior.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
+
+
+<dom-module id="art-canvas">
+    <style>
+        :host {
+            display: block;
+            /* box-sizing: border-box;
+             background-color: #fafafa;
+             color: #212121;
+             padding: 1em;
+             @apply(--paper-font-common-base);
+             @apply(--shadow-elevation-2dp);
+             border-radius: 2px; */
+        }
+
+        .cnt-title{
+            --paper-input-container-disabled:{
+                color: #00b0ff;
+                opacity: 1;
+            };
+
+            --paper-input-container-underline:{
+                display: none;
+            };
+
+            --paper-input-container-underline-disabled:{
+                display: none;
+            };
+
+            --paper-input-container-label-floating:{
+                display: none;
+            }
+
+        }
+
+    </style>
+    <template>
+
+        <art-globals id="glob"></art-globals>
+        <iron-signals on-iron-signal-language="langUpd"></iron-signals>
+
+        <firebase-document
+                id="document"
+                app-name="notes"
+                path="artists/[[artist]]/canvas/[[objId]]"
+                data="{{artObj}}">
+        </firebase-document>
+
+        <!-- isAdmin true so disabled is false all the time, so modification is allowed -->
+        <paper-input label="{{localize('name')}}" value="{{artObj.name}}" class="cnt-title" disabled="[[!isAdmin]]"></paper-input>
+        <paper-input label="{{localize('desc')}}" value="{{artObj.desc}}" class="cnt-body"  disabled="[[!isAdmin]]"></paper-input>
+
+        <a href="[[imgUrl]]" target="_blank">Picture</a>
+        <h3>{{artObj.url}}</h3>
+        <art-controls on-control-evt="execControl" hidden$="[[!isadmin]]"></art-controls>
+
+    </template>
+    <script>
+        Polymer({
+            is: "art-canvas",
+
+            properties:{
+                artist: {
+                    type: String,
+                },
+                imgUrl:{
+                    type: String,
+                    computed: 'computedUrl(artObj.name,artist)',
+                }
+            },
+
+            behaviors: [
+                Polymer.ArtObjBehaviorImpl,
+                Polymer.ArtLangBehavior,
+            ],
+
+            computedUrl(c,a){
+                var res = this.$.glob.data.fol+""+
+                this.$.glob.data.folArtist+"/"+
+                a.replace(/\s+/g,"")+"/"+
+                c.replace(/\s+/g,"")+
+                ".jpg";
+                this.artObj.url = res;
+                //console.log('computedURL: '+res);
+                return res;
+            },
+
+            // Override
+            getPath(){
+                return 'artists/'+this.artist+'/canvas';
+            },
+
+            goToList(){
+                // Fire event to go back to the list after a save
+            },
+
+            ready() {
+                this.newObj();
+                this.objType = 'canvas';
+            },
+
+            newObj(){
+                this.artObj = {name: '', desc: ''};
+            }
+
+        });
+    </script>
+
+</dom-module>

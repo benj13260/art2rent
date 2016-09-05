@@ -1,0 +1,15 @@
+<script>
+    (() => {
+        'use strict';
+
+        Polymer.ArtObjListBehaviorImpl = {
+            showObj(event, objType){
+                let artObj = Polymer.dom(event).localTarget;
+                this.fire('show-obj',{
+                    objId: artObj.id,
+                    objType: objType});
+                    //Working: console.log(" showArtist :"+currArtist.querySelector('iron-image').sizing);
+            },
+        };
+    })();
+</script>

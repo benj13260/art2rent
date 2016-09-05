@@ -1,0 +1,83 @@
+<link rel="import" href="../bower_components/paper-styles/shadow.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="art-canvas-thumb.html">
+<link rel="import" href="art-page-behavior.html">
+<link rel="import" href="art-globals.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<dom-module id="art-canvas-list">
+    <style>
+
+        art-canvas-thumb{
+            cursor:pointer;
+        }
+
+    </style>
+    <template>
+
+        <art-globals id="globs"></art-globals>
+
+        <firebase-query  id = "queryCanvas"
+                         app-name = "notes"
+                         data = "{{dataCanvas}}"></firebase-query>
+
+        <app-indexeddb-mirror session = "[[user.uid]]" key = "canvasList"
+                data = "{{dataCanvas}}" persisted-data = "{{persistedDataCanvas}}">
+        </app-indexeddb-mirror>
+
+        <div class = "canvasList">
+            <template id = "repeater" is = "dom-repeat" items = "[[persistedDataCanvas]]">
+                <a href = "#fullscreen/[[artist]]/[[item.$key]]">
+                    <art-canvas-thumb
+                            id$ = "[[item.$key]]"
+                            artist = "[[artist]]"
+                            obj-art = "[[item]]"
+                            lang = "[[lang]]">
+                    </art-canvas-thumb>
+                </a>
+            </template>
+        </div>
+
+    </template>
+    <script>
+
+        Polymer({
+            is: "art-canvas-list",
+
+            properties:{
+                artist: {
+                    type: String,
+                    observer:['artUpd']
+                },
+
+                artSection: {
+                    type: String,
+                    value: 'null',
+                    notify: true,
+                },
+                signedIn: {
+                    type: Boolean,
+                    reflectToAttribute: true,
+                    notify: true,
+                    value: false,
+                },
+            },
+
+             behaviors: [
+                 Polymer.ArtPageBehaviorImpl
+             ],
+
+            artUpd(newv, oldv){
+                if(!this.isPageActive(this.$.globs.pages.artist))
+                    return;
+                this.$.queryCanvas.path = null;
+                this.$.queryCanvas.path = 'artists/' + this.artist + '/canvas';
+            },
+
+        });
+    </script>
+
+</dom-module>

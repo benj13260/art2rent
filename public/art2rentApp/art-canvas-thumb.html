@@ -1,0 +1,99 @@
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="art-globals.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+
+<link rel="import" href="art-globals.html">
+<link rel="import" href="art-lang-behavior.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
+
+
+<dom-module id="art-canvas-thumb">
+    <template>
+        <style>
+            .item {
+                @apply(--layout-horizontal);
+                padding: 20px;
+                border-radius: 8px;
+                background-color: white;
+                border: 1px solid #ddd;
+                max-width: 800px;
+                margin: 16px auto 0 auto;
+            }
+            .item:focus {
+                outline: 0;
+                border-color: #333;
+            }
+
+            .avatar {
+                height: 100px;
+                width: 100px;
+                border-radius: 20px;
+                box-sizing: border-box;
+                background-color: #DDD;
+                background: #ddd;
+                --iron-image-placeholder: {
+                    background: #ddd;
+                };
+            }
+
+            .pad {
+                padding: 0 16px;
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+            }
+
+            .primary {
+                font-size: 16px;
+                font-weight: bold;
+            }
+            .secondary {
+                font-size: 14px;
+            }
+
+        </style>
+
+        <art-globals id="glob"></art-globals>
+        <iron-signals on-iron-signal-language="langUpd"></iron-signals>
+
+        <div class="item">
+            <iron-image preload fade id="avatar" class="avatar" sizing="contain"></iron-image>
+            <div class="pad">
+                <div class="primary">[[objArt.name]]</div>
+                <div class="secondary">[[objArt.desc]]</div>
+            </div>
+            <paper-icon-button data-args="[[objArt.name]]" on-tap="del" icon="icons:clear"></paper-icon-button>
+        </div>
+
+
+        <firebase-document app-name="notes" id="canvas" ></firebase-document>
+
+    </template>
+
+    <script>
+        Polymer({
+            is: 'art-canvas-thumb',
+            properties:{
+                objArt: {
+                    type: Object,
+                    observer: 'canvasUpd'
+                },
+                artist: String,
+            },
+
+            canvasUpd(){
+                this.$.avatar.src = this.objArt.url;
+            },
+
+            del(e){
+                e.preventDefault();
+                this.$.canvas.path = 'artists/'+this.artist+'/canvas/'+this.objArt.name;
+                this.$.canvas.destroy();
+                this.$.canvas.reset();
+            }
+        });
+    </script>
+
+</dom-module>
+

@@ -1,0 +1,73 @@
+<script>
+    (() => {
+        'use strict';
+        // To be used for firebase query elements which path is dynamic (e.g. canvas-list)
+        // And need to be refreshed each time the section is called
+        // Not needed for unchanged path
+        Polymer.ArtPageBehaviorImpl = {
+            properties: {
+                artSection: {
+                    type: String,
+                    value: 'null',
+                    notify: true,
+                },
+                signedIn: {
+                    type: Boolean,
+                    reflectToAttribute: true,
+                    notify: true,
+                    value: false,
+                },
+                isPageActive: {
+                    type: Boolean,
+                    value: false,
+                },
+            },
+
+
+            isPageActive(page){
+                //console.log(this.artSection +' == '+ page);
+                if (this.artSection == page) {
+                    return true;
+                }
+                return false;
+            },
+
+                /*
+                //Solution: 1 depending on the page
+                setFirebaseActive(act){
+                    if (this.$.query.disabled == false && act)
+                        return;
+                    if (act)
+                        this.isPageActive = true;
+                    else
+                        this.isPageActive = false;
+                    this.$.query.disabled = !this.isPageActive;
+                },
+                sectionUpd(e){
+                     console.log('New Page evaluation: '+this.artSection +' == '+ this.getPage() +' && '+this.signedIn );
+                     if (this.artSection == this.getPage() && this.signedIn)
+                         this.setFirebaseActive(true);
+                     else
+                         this.setFirebaseActive(false);
+                }
+
+    //            this.$.globs.pages.artist
+
+                sectionUpd(a,b){
+                    console.log('SectionUPD '+this.artSection);
+
+                    if (this.artSection == this.$.globs.pages.artist){
+                        this.artistSectionLoad(true);
+                    }else if (this.artSection == this.$.globs.pages.artFullScreen){
+                        this.artistSectionLoad(false);
+
+                        //this.$.query.disabled = true;
+                        //this.$.query.disabled = false;
+
+                        //                    this.setFirebaseActive(true);
+                    }
+
+                } */
+        };
+    })();
+</script>

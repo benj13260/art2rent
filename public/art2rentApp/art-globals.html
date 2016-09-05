@@ -1,0 +1,30 @@
+<polymer-element name="art-globals">
+    <script>
+                Polymer({
+
+                    is: 'art-globals',
+                    properties:{
+                        data: {
+                            type: Object,
+                            value: {
+                                    fol: 'https://googledrive.com/host/',
+                                    folHead : '0B1P55sPkNQO0THM5cnVNbFlocVU',
+                                    fr : 'fr',
+                                    en : 'en',
+                                    folArtist:'0B1P55sPkNQO0WkMxOTU0Nl9ZcnM',
+                                    db : 'https://webapp-c075f.firebaseio.com/'
+                            }
+                        },
+
+                        pages:{
+                            type: Object,
+                            value: {
+                                artist: 'artist',
+                                artistlist: 'artist-list',
+                                fullscreen: 'fullscreen'
+                            }
+                        },
+                    }
+                });
+    </script>
+</polymer-element>

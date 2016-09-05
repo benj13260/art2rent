@@ -1,0 +1,92 @@
+<link rel="import" href="../bower_components/paper-styles/shadow.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="art-artist-thumb.html">
+<link rel="import" href="art-obj-list-behavior.html">
+<link rel="import" href="art-page-behavior.html">
+<link rel="import" href="art-globals.html">
+
+
+<dom-module id="art-artist-list">
+  <style>
+
+    art-artist-thumb{
+      cursor:pointer;
+    }
+
+  </style>
+  <template>
+
+    <art-globals id="globs"></art-globals>
+
+    <firebase-query
+        id="queryArtistList"
+        log
+        app-name="notes"
+        data="{{data}}">
+    </firebase-query>
+
+    <app-indexeddb-mirror
+        session="[[user.uid]]"
+        key="artistList"
+        data="{{data}}"
+        persisted-data="{{persistedData}}">
+    </app-indexeddb-mirror>
+
+    <div class="artistList">
+      <template is="dom-repeat" items="[[persistedData]]">
+        <a href="#artist/[[item.$key]]">
+          <art-artist-thumb id$="[[item.$key]]" obj-art="[[item]]"></art-artist-thumb>
+        </a>
+      </template>
+    </div>
+
+  </template>
+  <script>
+
+    Polymer({
+      is: "art-artist-list",
+
+      properties : {
+        loadQuery: {
+          type: Boolean,
+          observer:['loadQuery'],
+        }
+      },
+
+      behaviors: [
+          Polymer.ArtObjListBehaviorImpl,
+          Polymer.ArtPageBehaviorImpl,
+      ],
+
+      observers:[
+        'pageUpd(artSection)'
+      ],
+
+      showArtist(event){
+          this.showObj(event,'artist');
+      },
+
+      pageUpd(artSection){
+        if (!this.isPageActive(this.$.globs.pages.artistlist))
+            return;
+        if (!this.$.queryArtistList.path)
+            this.$.queryArtistList.path = "/artists";
+      },
+
+      loadQ(){
+        this.$.queryArtistList.path = "/artists";
+      },
+
+      loadQuery(newv, oldv){
+          if (newv){
+            this.loadQ();
+          }
+      },
+
+    });
+  </script>
+
+</dom-module>

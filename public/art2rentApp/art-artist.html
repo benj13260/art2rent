@@ -1,0 +1,136 @@
+<link rel="import" href="../bower_components/paper-styles/shadow.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+
+<link rel="import" href="art-obj-behavior.html">
+<link rel="import" href="art-page-behavior.html">
+<link rel="import" href="art-controls.html">
+<link rel="import" href="art-canvas.html">
+<link rel="import" href="art-canvas-list.html">
+<link rel="import" href="art-lang-behavior.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
+<link rel="import" href="art-globals.html">
+
+
+<dom-module id="art-artist">
+  <style>
+    :host {
+      display: block;
+     /* box-sizing: border-box;
+      background-color: #fafafa;
+      color: #212121;
+      padding: 1em;
+      @apply(--paper-font-common-base);
+      @apply(--shadow-elevation-2dp);
+      border-radius: 2px; */
+    }
+
+    .cnt-title{
+      --paper-input-container-disabled:{
+        color: #00b0ff;
+        opacity: 1;
+      };
+
+      --paper-input-container-underline:{
+        display: none;
+      };
+
+      --paper-input-container-underline-disabled:{
+        display: none;
+      };
+
+      --paper-input-container-label-floating:{
+        display: none;
+      }
+
+    }
+
+  </style>
+  <template>
+
+    <art-globals id="globs"></art-globals>
+    <iron-signals on-iron-signal-language="langUpd"></iron-signals>
+
+      <firebase-document
+        id="documentArtist"
+        app-name="notes"
+        data="{{artObj}}">
+    </firebase-document>
+
+    <h3>[[language]]</h3>
+
+    <!--template is="dom-if" if="notNull"></template-->
+      <!-- hidden$="[[isArtist]]" -->
+    <a href="#fullscreen/[[objId]]">[[artObj.name]]</a>
+
+  <!-- isAdmin true so disabled is false all the time, so modification is allowed -->
+  <paper-input label="{{localize('name')}}" value="{{artObj.name}}" class="cnt-title" disabled="[[!isAdmin]]"></paper-input>
+  <paper-input label="{{localize('desc')}}" value="{{artObj.desc}}" class="cnt-body"  disabled="[[!isAdmin]]"></paper-input>
+
+  <template is="dom-if" if="[[isAdmin]]">
+      <art-controls on-control-evt="execControl"></art-controls>
+  </template>
+
+    <!--paper-button raised on-tap="animated.open()">New canvas</paper-button-->
+    <!--paper-dialog id="animated" entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop-->
+    <art-canvas id="canvas" is-admin="[[isAdmin]]" artist ="[[objId]]"></art-canvas>
+
+    <!-- /paper-dialog -->
+    <art-canvas-list id="canvasList" artist="[[objId]]" art-section="[[artSection]]" signed-in="[[signedIn]]"></art-canvas-list>
+
+
+  </template>
+  <script>
+    Polymer({
+      is: "art-artist",
+
+      properties:{
+        objId: {
+          type: String,
+          observer:['objUpd'],
+          notify: true
+        },
+        isArtist:{
+          type: Boolean,
+          value: false,
+        },
+      },
+
+      behaviors: [
+        Polymer.ArtObjBehaviorImpl,
+        Polymer.ArtLangBehavior,
+        Polymer.ArtPageBehaviorImpl,
+      ],
+
+      objUpd(newv, oldv){
+        if (newv) {
+          isArtist = true;
+        }
+        if (!this.isPageActive(this.$.globs.pages.artist))
+          return;
+        this.$.documentArtist.path='/artists/'+this.objId;
+      },
+
+      getPath(){
+        return 'artists/';
+      },
+
+      ready() {
+        this.newObj();
+        this.objType = 'artist';
+      },
+
+      newObj(){
+        this.artObj = {name: '', desc: ''};
+      },
+
+      addCanvas(e){
+        this.set('route.path','canvas/'+objId);
+      }
+
+    });
+  </script>
+
+</dom-module>

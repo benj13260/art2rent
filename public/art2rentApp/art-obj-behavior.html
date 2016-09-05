@@ -1,0 +1,58 @@
+<script>
+    (() => {
+        'use strict';
+
+        Polymer.ArtObjBehaviorImpl = {
+            properties: {
+                isAdmin: {
+                    type: Boolean,
+                    value: false,
+                },
+                objId: String,
+                objType: String,
+            },
+
+            // must be overwritten
+            getPath(){
+                return '';
+            },
+
+            goToList(){
+                // Fire event to go back to the list after a save
+                this.fire('go-to-list',{objType: this.objType});
+            },
+
+            execControl(e){
+                //console.log('execControl '+JSON.stringify(e.detail));
+                switch (e.detail) {
+                    case 'save': this.save(); break;
+                    case 'delete': this.delete(); break;
+                    case 'new': this.newObj(); break;
+                }
+            },
+
+            save() {
+                console.log('Save OBJ: '+JSON.stringify(this.artObj));
+                // Never set ObjID has it used by firebase in the patch
+                // If this objid is null then a new object is created.
+                //console.log('save '+JSON.stringify(this.artObj));
+                return this.$.document.save(this.getPath(),this.artObj.name) //this.objId)
+                        .then(() => { this.goToList(); });
+            },
+
+            delete() {
+                if (!this.$.document.isNew) {
+                    this.$.document.destroy();
+                    this.$.document.reset();
+                }
+                return Promise.resolve().then(() => { this.goToList(); });;
+            },
+
+            newObj(){
+
+            },
+
+        };
+
+    })();
+</script>

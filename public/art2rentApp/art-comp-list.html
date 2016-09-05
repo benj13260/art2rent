@@ -1,0 +1,63 @@
+<link rel="import" href="../bower_components/paper-styles/shadow.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="art-comp-thumb.html">
+<link rel="import" href="art-obj-list-behavior.html">
+
+
+<dom-module id="art-comp-list">
+    <style>
+
+        art-comp-thumb{
+            cursor:pointer;
+        }
+
+    </style>
+    <template>
+
+        <firebase-query
+                id="query"
+                app-name="notes"
+                path="/comps"
+                data="{{data}}">
+        </firebase-query>
+
+        <app-indexeddb-mirror
+                session="[[user.uid]]"
+                key="compList"
+                data="{{data}}"
+                persisted-data="{{persistedData}}">
+        </app-indexeddb-mirror>
+
+        <div class="compList">
+            <template is="dom-repeat" items="[[persistedData]]">
+                <a href="#comp/[[item.$key]]">
+                    <art-comp-thumb
+                            id$="[[item.$key]]"
+                            obj-art="[[item]]"
+                            lang="[[lang]]">
+                    </art-comp-thumb>
+                </a>
+            </template>
+        </div>
+
+    </template>
+    <script>
+
+        Polymer({
+            is: "art-comp-list",
+
+            behaviors: [
+                Polymer.ArtObjListBehaviorImpl
+            ],
+
+            showComp(event){
+                this.showObj(event,'comp');
+            },
+
+        });
+    </script>
+
+</dom-module>

@@ -1,0 +1,42 @@
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+
+<dom-module id="art-controls">
+    <style>
+        :host {
+            display: block;
+        }
+    </style>
+
+    <template>
+        <div class="controls">
+            <paper-icon-button data-args="new" on-tap="fireMess" icon="icons:add"></paper-icon-button>
+            <paper-icon-button data-args="delete" on-tap="fireMess" icon="icons:clear"></paper-icon-button>
+            <paper-icon-button data-args="save" on-tap="fireMess" icon="icons:done"></paper-icon-button>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: "art-controls",
+
+            fireMess(e){
+                let res = this.getDataArgs(e.target,'paper-icon-button');
+                res != null ? this.fire('control-evt', res) : null;
+                //console.log('res : : '+JSON.stringify(res));
+            },
+
+            getDataArgs(dome, tagName){
+                let i = 0;
+                do {
+                    i = i + 1;
+                    if (dome.tagName.toLowerCase() == tagName){
+                        return dome.dataset.args;
+                    }
+                    dome = dome.parentNode;
+                } while (i != 5);
+                return null;
+            }
+        });
+    </script>
+
+</dom-module>

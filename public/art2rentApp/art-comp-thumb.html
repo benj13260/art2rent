@@ -1,0 +1,84 @@
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="art-globals.html">
+
+
+<dom-module id="art-comp-thumb">
+    <template>
+        <style>
+            .item {
+                @apply(--layout-horizontal);
+                padding: 20px;
+                border-radius: 8px;
+                background-color: white;
+                border: 1px solid #ddd;
+                max-width: 800px;
+                margin: 16px auto 0 auto;
+            }
+            .item:focus {
+                outline: 0;
+                border-color: #333;
+            }
+
+            .avatar {
+                height: 100px;
+                width: 100px;
+                border-radius: 20px;
+                box-sizing: border-box;
+                background-color: #DDD;
+                background: #ddd;
+                --iron-image-placeholder: {
+                    background: #ddd;
+                };
+            }
+
+            .pad {
+                padding: 0 16px;
+                @apply(--layout-flex);
+                @apply(--layout-vertical);
+            }
+
+            .primary {
+                font-size: 16px;
+                font-weight: bold;
+            }
+            .secondary {
+                font-size: 14px;
+            }
+
+        </style>
+        <!--iron-ajax id="text" auto url="art2rentApp/json/text.json" handle-as="json" on-response="lkpText"></iron-ajax-->
+
+        <art-globals id="glob"></art-globals>
+        <div class="item">
+            <iron-image preload fade id="avatar" class="avatar" sizing="contain"></iron-image>
+            <div class="pad">
+                <div class="primary">[[objArt.name]]</div>
+                <div class="secondary">[[objArt.desc]]</div>
+            </div>
+        </div>
+
+    </template>
+    <script>
+
+        Polymer({
+            is: 'art-comp-thumb',
+            properties:{
+                objArt: {
+                    type: Object,
+                },
+            },
+
+            ready(){
+                console.log('Ready constant loaded : '+this.$.glob.data.fol);
+                this.$.avatar.src =
+                        this.$.glob.data.fol+""+
+                        this.$.glob.data.folHead+"/"+
+                        this.objArt.name.replace(/\s+/g,"")+
+                        ".jpg";
+            },
+        });
+
+    </script>
+</dom-module>
+

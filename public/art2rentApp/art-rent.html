@@ -1,0 +1,575 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/app-storage/app-indexeddb-mirror/app-indexeddb-mirror.html">
+<link rel="import" href="../bower_components/polymerfire/polymerfire.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/neon-animation/neon-animated-pages.html">
+
+<link rel="import" href="art-artist.html">
+<link rel="import" href="art-artist-list.html">
+<link rel="import" href="art-canvas.html">
+<link rel="import" href="art-canvas-list.html">
+<link rel="import" href="art-fullscreen.html">
+<link rel="import" href="art-login.html">
+<link rel="import" href="art-toolbar.html">
+<link rel="import" href="art-page-behavior.html">
+
+<link rel="import" href="../bower_components/app-localize-behavior/app-localize-behavior.html">
+<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/app-layout/app-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+
+<dom-module id="art-rent">
+  <template>
+    <style>
+
+        :host {
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        }
+
+        app-header {
+            background-color: rgba(255, 255, 255, 0.95);
+            --app-header-shadow: {
+                box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.2);
+                height: 10px;
+                bottom: -10px;
+            };
+        }
+
+        app-header:not([shadow]) {
+            border-bottom: 1px solid #ddd;
+        }
+
+        app-drawer {
+            --app-drawer-content-container: {
+                background-color: #f3f3f3;
+            };
+        }
+
+        #mainToolbar {
+            height: 110px;
+        }
+
+        paper-icon-button {
+            color: #7c7c7c;
+            --paper-icon-button-ink-color: #31f0ef;
+        }
+
+        .navItem {
+            margin-top: 13px;
+            @apply(--layout-horizontal);
+            @apply(--layout-justified);
+        }
+
+        .spacer {
+            @apply(--layout);
+            @apply(--layout-flex-auto);
+            @apply(--layout-center-center);
+        }
+
+        .logo {
+            height: 40px;
+            background-size: 100% 100%;
+            text-decoration: none;
+            text-transform: uppercase;
+            color: #7c7c7c;
+        }
+
+        .leftItem [icon] {
+            display: none;
+        }
+
+        shrine-detail {
+            height: calc(100vh - 65px);
+        }
+
+        /*:host([page=detail]) #mainToolbar {
+            height: 64px;
+        }
+
+        :host([page=detail]) paper-tabs {
+            display: none;
+        }
+
+        :host([page=detail]) .leftItem [icon=arrow-back] {
+            display: block;
+        }
+
+        :host([page=detail]) .leftItem [icon=menu] {
+            display: none;
+        }*/
+
+        paper-tabs {
+            --paper-tabs-selection-bar-color: #31f0ef;
+            margin-left: -55px;
+            color: #31f0ef;
+            font-size: 13px;
+        }
+
+        paper-tab {
+            @apply(--layout-flex-none);
+            padding: 0;
+            --paper-tab-ink: #31f0ef;
+        }
+
+        paper-tab a {
+            @apply(--layout-horizontal);
+            @apply(--layout-center-center);
+            text-decoration: none;
+            text-transform: uppercase;
+            color: #7c7c7c;
+            font-weight: 500;
+            padding: 0 20px;
+            height: 100%;
+        }
+
+        .list {
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+        .list a {
+            display: block;
+            line-height: 40px;
+            text-decoration: none;
+            text-transform: uppercase;
+            color: #7c7c7c;
+        }
+
+        .list a.active {
+            color: black;
+            font-weight: bold;
+        }
+
+        .profileBar {
+            margin-bottom: 40px;
+        }
+
+        .profilePic {
+            border-radius: 50% 50%;
+        }
+
+        .profileName {
+            @apply(--layout-flex);
+            margin-left: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0a3142;
+        }
+
+        [icon=settings] {
+            width: 35px;
+            height: 35px;
+            color: #0a3142;
+        }
+
+        /**
+         * Desktop small, tablet
+         */
+        @media (max-width: 1200px) {
+            .logo {
+                height: 17px;
+            }
+
+            #mainToolbar {
+                height: 64px;
+            }
+
+            shrine-detail {
+                height: auto;
+            }
+        }
+
+        /**
+         * Phone
+         */
+        @media (max-width: 400px) {
+            .leftItem [icon=menu] {
+                display: block;
+            }
+
+            paper-tabs {
+                display: none;
+            }
+        }
+
+    </style>
+
+
+      <app-location route="{{route}}" use-hash-as-path></app-location>
+
+      <app-route
+              route="{{route}}"
+              pattern=":page"
+              data="{{sectionData}}"
+              tail="{{subRoute}}"></app-route>
+
+      <app-route
+              route="{{subRoute}}"
+              pattern="/:id"
+              data="{{idData}}"
+              tail="{{subSubRoute}}"></app-route>
+
+      <firebase-auth
+            id="auth"
+            app-name="notes"
+            provider="google"
+            signed-in="{{signedIn}}"
+            user="{{user}}">
+      </firebase-auth>
+
+      <app-indexeddb-mirror
+            session="[[user.uid]]"
+            key="notes"
+            data="{{data}}"
+            persisted-data="{{persistedData}}">
+      </app-indexeddb-mirror>
+
+      <iron-media-query query="max-width: 400px" query-matches="{{smallScreen}}"></iron-media-query>
+
+      <app-drawer-layout drawer-width="288px" force-narrow>
+          <!-- navigation drawer for small screen sizes -->
+          <app-drawer id="drawer" opened="{{drawerOpened}}" swipe-open>
+              <template is="dom-if" if="[[smallScreen]]">
+                  <app-toolbar class="profileBar">
+                      <img class="profilePic" src="//app-layout-assets.appspot.com/assets/shrine/profile_pic.jpg"  width="30" height="30">
+                      <div class="profileName">Ben</div>
+                      <paper-icon-button icon="settings"></paper-icon-button>
+                      <paper-button on-tap="langUpd" data-args="fr">Fr</paper-button>
+                      <paper-button on-tap="langUpd" data-args="en">En</paper-button>
+                  </app-toolbar>
+                  <div class="list">
+                      <template is="dom-repeat" items="[[sections]]" as="section" initial-count="1">
+                          <a href="#[[section]]" class$="[[_getSectionClass(index, selectedTab)]]">[[section]]</a>
+                      </template>
+                  </div>
+             </template>
+          </app-drawer>
+
+          <app-header-layout>
+              <!-- main header -->
+              <app-header id="header" effects="waterfall" fixed="[[smallScreen]]" condenses="[[!smallScreen]]" reveals="[[!smallScreen]]">
+                  <app-toolbar id="mainToolbar">
+                      <div class="navItem leftItem">
+                          <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
+                      </div>
+                      <div class="spacer">
+                          <div class="logo">Art 2 Rent</div>
+                      </div>
+                      <div class="navItem">
+                          <na-toolbar
+                                  signed-in="[[signedIn]]"
+                                  on-sign-out="signOut"
+                                  on-lang-upd="langUpd">
+                          </na-toolbar>
+                      </div>
+                  </app-toolbar>
+
+                  <paper-tabs selected="{{selectedTab}}" attrForSelected="id" scrollable>
+                      <template is="dom-repeat" items="[[sections]]" as="section">
+                          <paper-tab id="[[section]]">
+                              <a href="#[[section]]">[[section]]</a>
+                          </paper-tab>
+                      </template>
+                  </paper-tabs>
+              </app-header>
+
+              <art-login
+                      on-sign-in="signIn"
+                      signed-in="[[signedIn]]"
+                      disabled="[[!online]]"
+                      email="[[user.email]]"
+                      is-admin="{{isAdmin}}">
+              </art-login>
+
+              <paper-dropdown-menu id="provider" label="Connect" on-iron-select="connectMeth"
+                                   horizontal-align="left" noink no-animations>
+                  <paper-listbox class="dropdown-content">
+                      <paper-item label="facebook">Facebook</paper-item>
+                      <paper-item label="google">Google</paper-item>
+                  </paper-listbox>
+              </paper-dropdown-menu>
+
+              <iron-pages role = "main"
+                          selected = "[[page]]"
+                          attr-for-selected = "id"
+                          selected-attribute = "visible"
+                          on-go-to-list = "goToObjList"
+                          on-show-obj = "goToObjO"
+                          on-route-upd = "routeUpd" >
+
+                  <!-- Detail arist description with Canvas list -->
+                  <art-artist id = "artist"
+                              is-admin = "[[isAdmin]]"
+                              signed-in = "[[signedIn]]"
+                              obj-id = "[[idData.id]]"
+                              art-section="[[page]]">
+                  </art-artist>
+
+                  <!-- List of Artist -->
+                  <art-artist-list id = "artist-list"
+                                   signed-in = "[[signedIn]]"
+                                   art-section="[[page]]" >
+                  </art-artist-list>
+
+                  <!-- Canvas Detail -->
+                  <art-fullscreen id = "fullscreen"
+                                  signed-in = "[[signedIn]]"
+                                  art-url = "[[subRoute.path]]"
+                                  language = "[[language]]"
+                                  art-section="[[page]]">
+                  </art-fullscreen>
+
+              </iron-pages>
+
+        </app-header-layout>
+      </app-drawer-layout>
+
+  </template>
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'art-rent',
+
+        properties:{
+
+            page: {
+                type: String,
+                reflectToAttribute: true,
+                observer: '_pageChanged'
+            },
+
+          route: Object,
+          subRoute: Object,
+          sectionData: Object,
+          idData: Object,
+          queryParams: Object,
+          items: Array,
+
+          routeLog: String,
+          initPath: {
+              type: String,
+              value: 'artistlist'
+          },
+          sections: {
+            type: Array,
+            value: function() {
+                return [
+                    'artist',
+                    'artist-list',
+                    'canvas',
+                    'canvas-List',
+                    'company',
+                    'companyList',
+                    'favoriteList',
+                ];
+            }
+          },
+        },
+
+        observers: [
+          //'_hashDidChange(route.path, items)',
+          //'_routeChanged(route.*)',
+          '_routePageChanged(sectionData.page)'
+        ],
+
+        behaviors: [
+            Polymer.AppLocalizeBehavior,
+      //      Polymer.ArtPageBehaviorImpl,
+        ],
+
+        signIn: function(e) {
+            this.$.auth.signInWithRedirect(e.detail).then(function(result) {
+                if (result.credential) {
+                    // This gives you a the Twitter OAuth 1.0 Access Token and Secret.
+                    // You can use these server side with your app's credentials to access the Twitter API.
+                    var token = result.credential.accessToken;
+                    var secret = result.credential.secret;
+                }
+                // The signed-in user info.
+                var userLoc = result.user;
+            }).catch(function(error) {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // The email of the user's account used.
+                var email = error.email;
+                // The firebase.auth.AuthCredential type that was used.
+                var credential = error.credential;
+            });
+        },
+
+        signOut(e){
+            this.$.auth.signOut();
+        },
+
+        connectMeth(e){
+            this.signIn({detail: this.$.provider.selectedItemLabel })
+        },
+
+        langUpd(e){
+            this.language = e.detail;
+            this.fire('iron-signal', {name: 'language', data: this.language});
+        },
+
+        // Set the initial route
+        ready() {
+          this.async(function() {
+              this.$.auth.signInAnonymously().then( () => {
+                  //console.log('signed in Anonymously');
+                  //this.langUpd({detail: 'en'});
+              });
+          });
+        },
+
+        // load localized messages
+        attached() {
+            this.loadResources(this.resolveUrl("./json/locales.json"));
+            this.langUpd({detail: 'en'});
+        },
+
+        _getSectionClass: function(index, selectedTab) {
+            return index === selectedTab ? 'active' : '';
+        },
+
+        _routePageChanged: function(page) {
+            Polymer.AppLayout.scroll({ top: 0, behavior: 'silent' });
+            this.drawerOpened = false;
+            this.routeLog = JSON.stringify(this.route);
+            //console.log('Route: '+this.routeLog);
+            this.page = page || this.initPath;
+            //console.log('selectedPage: '+this.page);
+        },
+
+        _pageChanged: function(page, oldPage) {
+            if (page != null) {
+                let res = page;
+                if (res == 'artistlist')
+                    res = 'artist-list';
+                this.importHref(
+                    this.resolveUrl('art-' + res + '.html'),
+                    function() {
+                        this._pageLoaded(Boolean(oldPage));
+                    }, null, true);
+            }
+        },
+
+        _pageLoaded: function(shouldResetLayout) {
+            this._ensureLazyLoaded();
+            if (shouldResetLayout) {
+                // The size of the header depends on the page (e.g. on some pages the tabs
+                // do not appear), so reset the header's layout only when switching pages.
+                this.async(function() {
+                   this.$.header.resetLayout();
+                  }, 1);
+              }
+          },
+
+          _ensureLazyLoaded: function() {
+              // load lazy resources after render and set `loadComplete` when done.
+              if (!this.loadComplete) {
+                  Polymer.RenderStatus.afterNextRender(this, function() {
+                      this.importHref(this.resolveUrl('lazy-resources.html'), function() {
+                          // Register service worker if supported.
+                          /*if ('serviceWorker' in navigator) {
+                              navigator.serviceWorker.register('../service-worker.js');
+                          }*/
+                          this.loadComplete = true;
+                      });
+                  });
+              }
+          },
+
+
+        routeUpd(e){
+            this.set('route.path',e.detail);
+        },
+
+        // Receive an event or the type of list to display
+        // 1. event: {objId: "-KNWYHF1bgIYueVc2FM1", objType: "artist"}
+        // 2. event: "artist
+        getTypeEvent(event){
+          //console.log('goToObjList: ' + event);
+          //console.log('goToObjList detail: ' + event.detail);
+          let _type = '';
+          if (event.detail === undefined) {
+            _type = event;
+          } else{
+            _type = event.detail.objType;
+          }
+          return _type;
+        },
+
+        // Receive an event or the type of obj to display
+        // 1. event: {objId: "-KNWYHF1bgIYueVc2FM1", objType: "artist"}
+        // 2. event: "artist
+        getObjEvent(event){
+          //console.log('goToObjList: ' + event);
+          //console.log('goToObjList detail: ' + event.detail);
+          let _name = '';
+          if (event.detail === undefined) {
+            _name = '';
+          } else{
+            _name = event.detail.objId;
+          }
+          return _name;
+        },
+
+          getRoute(){
+            return JSON.stringify(this.route);
+          },
+
+        goToObjO(event){
+          //console.log(event.detail);
+          let ty = this.getTypeEvent(event);
+          let ob = this.getObjEvent(event);
+          this.set('route.path',ty+'/'+ob);
+          /*
+            switch(ty) {
+                case('artist'):
+                  this.set('route.path','artist/'+ob);
+                  //console.log('path: '+this.route.path);
+                  //console.log('section: '+this.sectionData.page);
+                  //console.log('IdData.id : '+this.idData.id);
+                  break;
+                case('canvas'):
+                    this.set('route.path','artist/'+ob);
+                    //console.log('path: '+this.route.path);
+                    //console.log('section: '+this.sectionData.page);
+                    //console.log('IdData.id : '+this.idData.id);
+                    break;
+
+            }
+           */
+        },
+
+        goToObjList(event){
+            let ty = this.getTypeEvent(event);
+            this.set('route.path',ty+'List');
+            /*
+            switch(this.getTypeEvent(event)) {
+            case('artist'):
+              //this.$.artist.setAttribute('obj-id','');
+              this.set('route.path','artistList');
+              break;
+          } */
+        }
+
+      });
+    })();
+  </script>
+</dom-module>
